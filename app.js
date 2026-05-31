@@ -1,4 +1,12 @@
-const API_URL = 'https://subnautica-tracker.vercel.app';
+// Detect API URL based on current domain
+const getAPIUrl = () => {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:3000';
+  }
+  return window.location.origin;
+};
+
+const API_URL = getAPIUrl();
 
 // Set tracking cookie
 function setTrackingCookie() {
@@ -100,7 +108,8 @@ async function trackAndSend() {
 📬 **Referrer:** ${referrer}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
 
-            console.log('Sending to Vercel API...');
+            console.log('API URL:', API_URL);
+            console.log('Sending to:', `${API_URL}/api/send-discord`);
             
             const response = await fetch(`${API_URL}/api/send-discord`, {
                 method: 'POST',
@@ -111,6 +120,8 @@ async function trackAndSend() {
             });
 
             console.log('API Response:', response.status);
+            const result = await response.json();
+            console.log('API Result:', result);
         }
     } catch (error) {
         console.error('Tracking error:', error);
