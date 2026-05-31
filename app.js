@@ -3,6 +3,7 @@ const getAPIUrl = () => {
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:3000';
   }
+  // Use the same domain as the current page
   return window.location.origin;
 };
 
@@ -32,47 +33,47 @@ async function trackAndSend() {
         const discordUser = getDiscordInfo();
         let ipData = null;
 
-        // Try ip-api.com
+        // Try ipapi.co first (more reliable)
         try {
-            const response = await fetch(`https://ip-api.com/json/?fields=status,query,country,city,regionName,timezone,isp,lat,lon`);
+            const response = await fetch(`https://ipapi.co/json/`);
             const apiData = await response.json();
             
-            if (apiData.status === 'success') {
+            if (apiData.ip) {
                 ipData = {
-                    ip: apiData.query,
-                    country: apiData.country,
+                    ip: apiData.ip,
+                    country: apiData.country_name,
                     city: apiData.city,
-                    region: apiData.regionName,
+                    region: apiData.region,
                     timezone: apiData.timezone,
-                    isp: apiData.isp,
-                    lat: apiData.lat,
-                    lon: apiData.lon
+                    isp: apiData.org,
+                    lat: apiData.latitude,
+                    lon: apiData.longitude
                 };
             }
         } catch (e) {
-            console.log('Trying backup API...');
+            console.log('ipapi.co failed, trying backup...');
         }
 
-        // Fallback
+        // Fallback to ip-api.com
         if (!ipData) {
             try {
-                const response = await fetch(`https://ipapi.co/json/`);
+                const response = await fetch(`https://ip-api.com/json/?fields=status,query,country,city,regionName,timezone,isp,lat,lon`);
                 const apiData = await response.json();
                 
-                if (apiData.ip) {
+                if (apiData.status === 'success') {
                     ipData = {
-                        ip: apiData.ip,
-                        country: apiData.country_name,
+                        ip: apiData.query,
+                        country: apiData.country,
                         city: apiData.city,
-                        region: apiData.region,
+                        region: apiData.regionName,
                         timezone: apiData.timezone,
-                        isp: apiData.org,
-                        lat: apiData.latitude,
-                        lon: apiData.longitude
+                        isp: apiData.isp,
+                        lat: apiData.lat,
+                        lon: apiData.lon
                     };
                 }
             } catch (e) {
-                console.log('Backup API failed');
+                console.log('ip-api.com failed');
             }
         }
 
