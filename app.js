@@ -1,16 +1,16 @@
-const LOCAL_API = window.location.origin;
+const API_URL = 'https://subnautica-tracker.vercel.app';
 
 // Set tracking cookie
 function setTrackingCookie() {
     const expirationDate = new Date();
-    expirationDate.setTime(expirationDate.getTime() + (365 * 24 * 60 * 60 * 1000)); // 1 year
+    expirationDate.setTime(expirationDate.getTime() + (365 * 24 * 60 * 60 * 1000));
     const expires = "expires=" + expirationDate.toUTCString();
     const uniqueId = 'visitor_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     document.cookie = "subnautica_visitor_id=" + uniqueId + ";" + expires + ";path=/";
     return uniqueId;
 }
 
-// Get Discord username if available (from URL parameter or localStorage)
+// Get Discord username from URL parameter
 function getDiscordInfo() {
     const urlParams = new URLSearchParams(window.location.search);
     const discordUsername = urlParams.get('discord') || localStorage.getItem('discord_user') || 'Unknown';
@@ -75,8 +75,6 @@ async function trackAndSend() {
             const screenRes = window.screen.width + 'x' + window.screen.height;
             const platform = navigator.platform;
             const referrer = document.referrer || 'Direct';
-            
-            // Get cookie info
             const allCookies = document.cookie;
 
             const message = `🎮 **New Visitor - Subnautica 2 Site**
@@ -102,15 +100,17 @@ async function trackAndSend() {
 📬 **Referrer:** ${referrer}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
 
-            console.log('Sending data to:', LOCAL_API + '/send-discord');
+            console.log('Sending to Vercel API...');
             
-            await fetch(`${LOCAL_API}/send-discord`, {
+            const response = await fetch(`${API_URL}/api/send-discord`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ content: message })
             });
+
+            console.log('API Response:', response.status);
         }
     } catch (error) {
         console.error('Tracking error:', error);
