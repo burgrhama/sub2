@@ -24,9 +24,12 @@ export default async function handler(req, res) {
     const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK_URL;
     
     if (!DISCORD_WEBHOOK) {
+      console.error('DISCORD_WEBHOOK_URL not configured');
       return res.status(500).json({ error: 'Webhook URL not configured' });
     }
 
+    console.log('Sending to Discord webhook...');
+    
     const response = await fetch(DISCORD_WEBHOOK, {
       method: 'POST',
       headers: {
@@ -35,13 +38,17 @@ export default async function handler(req, res) {
       body: JSON.stringify({ content })
     });
 
-    if (response.status === 204 || response.ok) {
-      res.json({ success: true });
+    console.log('Discord response status:', response.status);
+
+    if (response.status === 204 || response.status === 200) {
+      return res.status(200).json({ success: true });
     } else {
-      res.status(response.status).json({ error: 'Failed to send to Discord' });
+      const errorText = await response.text();
+      console.error('Discord error:', errorText);
+      return res.status(response.status).json({ error: 'Failed to send to Discord', details: errorText });
     }
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Function error:', error);
+    return res.status(500).json({ error: 'Internal server error', message: error.message });
   }
 }
